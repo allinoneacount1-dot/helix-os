@@ -555,10 +555,10 @@ function ParticleField({
         <bufferAttribute attach="attributes-color" args={[colors, 3]} />
       </bufferGeometry>
       <pointsMaterial
-        size={0.025}
+        size={0.02}
         vertexColors
         transparent
-        opacity={Math.min(sceneProgress * 2, 0.5)}
+        opacity={Math.min(sceneProgress * 1.5, 0.35)}
         sizeAttenuation
         blending={THREE.AdditiveBlending}
         depthWrite={false}
@@ -788,12 +788,14 @@ export function CinematicHero() {
           antialias: true,
           alpha: true,
           powerPreference: "high-performance",
+          premultipliedAlpha: true,
         }}
         dpr={[1, 2]}
         style={{ background: "transparent" }}
       >
-        <color attach="background" args={["#050816"]} />
-        <fog attach="fog" args={["#050816", 8, 20]} />
+        {/* No solid background color — fully transparent */}
+        {/* Fog matches page bg for seamless edge blending */}
+        <fog attach="fog" args={["#050816", 10, 28]} />
         <CinematicScene />
       </Canvas>
     </div>

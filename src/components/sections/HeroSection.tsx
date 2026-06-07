@@ -182,17 +182,62 @@ export function HeroSection() {
             className="relative w-full h-[400px] lg:h-[600px]"
           >
             <CinematicHero />
-            {/* Glow behind */}
-            <div className="absolute inset-0 -z-10">
+
+            {/* Edge blending overlays — soft fade to page bg */}
+            <div className="absolute inset-0 pointer-events-none">
+              {/* Radial gradient to blend canvas edges */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: "radial-gradient(ellipse at center, transparent 40%, #050816 85%)",
+                }}
+              />
+              {/* Top fade */}
+              <div
+                className="absolute top-0 left-0 right-0 h-24"
+                style={{
+                  background: "linear-gradient(to bottom, #050816, transparent)",
+                }}
+              />
+              {/* Bottom fade */}
+              <div
+                className="absolute bottom-0 left-0 right-0 h-24"
+                style={{
+                  background: "linear-gradient(to top, #050816, transparent)",
+                }}
+              />
+              {/* Left fade */}
+              <div
+                className="absolute top-0 bottom-0 left-0 w-16"
+                style={{
+                  background: "linear-gradient(to right, #050816, transparent)",
+                }}
+              />
+              {/* Right fade */}
+              <div
+                className="absolute top-0 bottom-0 right-0 w-16"
+                style={{
+                  background: "linear-gradient(to left, #050816, transparent)",
+                }}
+              />
+            </div>
+
+            {/* Ambient glow orbs that extend beyond canvas */}
+            <div className="absolute inset-0 -z-10 overflow-visible pointer-events-none">
               <motion.div
-                animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-                transition={{ duration: 4, repeat: Infinity }}
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-[#5B8CFF]/10 blur-[100px]"
+                animate={{ scale: [1, 1.3, 1], opacity: [0.15, 0.25, 0.15] }}
+                transition={{ duration: 5, repeat: Infinity }}
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-[#5B8CFF]/8 blur-[120px]"
               />
               <motion.div
-                animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.4, 0.2] }}
-                transition={{ duration: 5, repeat: Infinity }}
-                className="absolute top-1/3 left-1/3 w-[200px] h-[200px] rounded-full bg-[#7C3AED]/10 blur-[80px]"
+                animate={{ scale: [1.2, 1, 1.2], opacity: [0.1, 0.2, 0.1] }}
+                transition={{ duration: 6, repeat: Infinity }}
+                className="absolute top-1/3 left-1/4 w-[300px] h-[300px] rounded-full bg-[#7C3AED]/8 blur-[100px]"
+              />
+              <motion.div
+                animate={{ scale: [1, 1.4, 1], opacity: [0.08, 0.15, 0.08] }}
+                transition={{ duration: 7, repeat: Infinity }}
+                className="absolute bottom-1/4 right-1/4 w-[250px] h-[250px] rounded-full bg-[#00D4AA]/6 blur-[80px]"
               />
             </div>
           </motion.div>
