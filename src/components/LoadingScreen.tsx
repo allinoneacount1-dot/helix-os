@@ -4,108 +4,143 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap } from "lucide-react";
 
-const neuralNodes = [
-  { x: 50, y: 20, delay: 0 },
-  { x: 25, y: 40, delay: 0.2 },
-  { x: 75, y: 40, delay: 0.4 },
-  { x: 15, y: 65, delay: 0.6 },
-  { x: 50, y: 60, delay: 0.3 },
-  { x: 85, y: 65, delay: 0.5 },
-  { x: 35, y: 85, delay: 0.7 },
-  { x: 65, y: 85, delay: 0.8 },
-];
+interface LoadingScreenProps {
+  onComplete: () => void;
+}
 
-const neuralConnections = [
-  [0, 1], [0, 2], [1, 3], [1, 4], [2, 4], [2, 5],
-  [3, 6], [4, 6], [4, 7], [5, 7], [3, 4], [5, 4],
-];
-
-export function LoadingScreen({ onComplete }: { onComplete: () => void }) {
+export function LoadingScreen({ onComplete }: LoadingScreenProps) {
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState(0);
 
-  useEffect(() => {
-    const duration = 2500;
-    const steps = 100;
-    const interval = duration / steps;
-    let current = 0;
-
-    const timer = setInterval(() => {
-      current++;
-      setProgress(current);
-      if (current >= 25 && phase === 0) setPhase(1);
-      if (current >= 50 && phase === 1) setPhase(2);
-      if (current >= 75 && phase === 2) setPhase(3);
-      if (current >= 100) {
-        clearInterval(timer);
-        setTimeout(onComplete, 300);
-      }
-    }, interval);
-
-    return () => clearInterval(timer);
-  }, [onComplete, phase]);
-
-  const phaseLabels = [
+  const phases = [
     "Initializing neural network...",
-    "Loading intelligence modules...",
-    "Connecting agent nodes...",
+    "Loading agent configurations...",
+    "Connecting to knowledge base...",
+    "Syncing wealth data...",
+    "Preparing startup studio...",
     "System ready.",
   ];
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setTimeout(onComplete, 600);
+          return 100;
+        }
+        return prev + Math.random() * 15 + 5;
+      });
+    }, 200);
+
+    return () => clearInterval(interval);
+  }, [onComplete]);
+
+  useEffect(() => {
+    const phaseInterval = setInterval(() => {
+      setPhase((prev) => (prev < phases.length - 1 ? prev + 1 : prev));
+    }, 500);
+    return () => clearInterval(phaseInterval);
+  }, []);
+
+  const clampedProgress = Math.min(progress, 100);
+
   return (
     <motion.div
+      className="fixed inset-0 z-[100] bg-[#050816] flex flex-col items-center justify-center"
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
-      className="fixed inset-0 z-[100] bg-[#050816] flex flex-col items-center justify-center"
     >
-      {/* Neural network animation */}
-      <div className="relative w-48 h-48 mb-8">
-        <svg viewBox="0 0 100 100" className="w-full h-full">
-          {/* Connections */}
-          {neuralConnections.map(([from, to], i) => (
-            <motion.line
-              key={`line-${i}`}
-              x1={neuralNodes[from].x}
-              y1={neuralNodes[from].y}
-              x2={neuralNodes[to].x}
-              y2={neuralNodes[to].y}
-              stroke="#5B8CFF"
-              strokeWidth="0.3"
-              initial={{ strokeOpacity: 0.05 }}
-              animate={{
-                strokeOpacity: progress > (i + 1) * 10 ? [0.05, 0.4, 0.15] : 0.05,
-              }}
-              transition={{ duration: 0.8, repeat: progress > (i + 1) * 10 ? Infinity : 0, repeatType: "reverse" }}
-            />
-          ))}
+      {/* Background grid */}
+      <div className="absolute inset-0 opacity-[0.03]" style={{
+        backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
+        backgroundSize: "40px 40px",
+      }} />
 
-          {/* Nodes */}
-          {neuralNodes.map((node, i) => (
-            <motion.circle
-              key={`node-${i}`}
-              cx={node.x}
-              cy={node.y}
-              fill="#5B8CFF"
-              initial={{ r: 0, opacity: 0 }}
-              animate={{
-                r: progress > node.delay * 100 ? [2, 4, 3] : 0,
-                opacity: progress > node.delay * 100 ? [0.3, 1, 0.6] : 0,
+      {/* Neural network animation */}
+      <div className="relative w-64 h-64 mb-8">
+        {/* Nodes */}
+        {[...Array(12)].map((_, i) => {
+          const angle = (i / 12) * Math.PI * 2;
+          const radius = 80;
+          const x = 128 + Math.cos(angle) * radius;
+          const y = 128 + Math.sin(angle) * radius;
+          const isCenter = i === 0;
+
+          return (
+            <motion.div
+              key={i}
+              className="absolute w-3 h-3 rounded-full"
+              style={{
+                left: isCenter ? 128 - 6 : x - 6,
+                top: isCenter ? 128 - 6 : y - 6,
+                backgroundColor: isCenter ? "#5B8CFF" : "#7C3AED",
+                boxShadow: `0 0 ${isCenter ? 20 : 10}px ${isCenter ? "#5B8CFF" : "#7C3AED"}40`,
               }}
-              transition={{ duration: 0.6, delay: node.delay }}
+              animate={{
+                scale: [1, 1.3, 1],
+                opacity: [0.5, 1, 0.5],
+              }}
+              transition={{
+                duration: 2,
+                delay: i * 0.15,
+                repeat: Infinity,
+              }}
             />
-          ))}
+          );
+        })}
+
+        {/* Connection lines */}
+        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 256 256">
+          {[...Array(12)].map((_, i) => {
+            const angle1 = (i / 12) * Math.PI * 2;
+            const angle2 = ((i + 1) / 12) * Math.PI * 2;
+            const r = 80;
+            const x1 = 128 + Math.cos(angle1) * r;
+            const y1 = 128 + Math.sin(angle1) * r;
+            const x2 = 128 + Math.cos(angle2) * r;
+            const y2 = 128 + Math.sin(angle2) * r;
+
+            return (
+              <motion.line
+                key={i}
+                x1={x1} y1={y1} x2={x2} y2={y2}
+                stroke="#5B8CFF"
+                strokeWidth="0.5"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: [0, 0.3, 0] }}
+                transition={{ duration: 2, delay: i * 0.1, repeat: Infinity, repeatDelay: 1 }}
+              />
+            );
+          })}
+          {/* Center connections */}
+          {[...Array(6)].map((_, i) => {
+            const angle = (i / 6) * Math.PI * 2;
+            const r = 80;
+            const x = 128 + Math.cos(angle) * r;
+            const y = 128 + Math.sin(angle) * r;
+
+            return (
+              <motion.line
+                key={`c-${i}`}
+                x1={128} y1={128} x2={x} y2={y}
+                stroke="#7C3AED"
+                strokeWidth="0.5"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: [0, 0.2, 0] }}
+                transition={{ duration: 1.5, delay: i * 0.2, repeat: Infinity, repeatDelay: 2 }}
+              />
+            );
+          })}
         </svg>
 
         {/* Center logo */}
         <motion.div
-          className="absolute inset-0 flex items-center justify-center"
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: progress > 50 ? 1 : 0, opacity: progress > 50 ? 1 : 0 }}
-          transition={{ duration: 0.5 }}
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-2xl bg-gradient-to-br from-[#5B8CFF] to-[#7C3AED] flex items-center justify-center"
+          animate={{ rotate: [0, 360] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
         >
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#5B8CFF] to-[#7C3AED] flex items-center justify-center">
-            <Zap size={20} className="text-white" />
-          </div>
+          <Zap size={28} className="text-white" />
         </motion.div>
       </div>
 
@@ -113,32 +148,42 @@ export function LoadingScreen({ onComplete }: { onComplete: () => void }) {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="text-center mb-6"
+        className="mb-6 text-center"
       >
-        <div className="font-[family-name:var(--font-space-grotesk)] text-2xl font-bold tracking-tight">
+        <h1 className="font-[family-name:var(--font-space-grotesk)] text-2xl font-bold tracking-tight">
           HELIX<span className="text-[#5B8CFF]"> OS</span>
-        </div>
+        </h1>
+        <p className="text-xs text-white/25 mt-1">Sovereign Intelligence System</p>
       </motion.div>
 
       {/* Progress bar */}
-      <div className="w-48 h-0.5 rounded-full bg-white/5 overflow-hidden mb-3">
+      <div className="w-64 h-1 rounded-full bg-white/5 overflow-hidden mb-4">
         <motion.div
           className="h-full rounded-full bg-gradient-to-r from-[#5B8CFF] to-[#7C3AED]"
-          style={{ width: `${progress}%` }}
-          transition={{ duration: 0.1 }}
+          style={{ width: `${clampedProgress}%` }}
+          transition={{ duration: 0.3 }}
         />
       </div>
 
-      {/* Phase label */}
-      <motion.div
-        key={phase}
-        initial={{ opacity: 0, y: 5 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-xs font-mono text-white/30"
+      {/* Phase text */}
+      <AnimatePresence mode="wait">
+        <motion.p
+          key={phase}
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -5 }}
+          className="text-xs text-white/30 font-mono"
+        >
+          {phases[phase]}
+        </motion.p>
+      </AnimatePresence>
+
+      {/* Progress percentage */}
+      <motion.span
+        className="absolute bottom-8 right-8 text-xs font-mono text-white/15"
       >
-        {phaseLabels[phase]}
-      </motion.div>
+        {Math.floor(clampedProgress)}%
+      </motion.span>
     </motion.div>
   );
 }
