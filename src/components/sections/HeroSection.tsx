@@ -1,11 +1,11 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion, useInView, useScroll, useTransform } from "framer-motion";
-import { HelixCore } from "@/components/HelixCore3D";
+import { CinematicHero } from "@/components/CinematicHero";
 import { Play, Rocket, ArrowRight, ChevronDown } from "lucide-react";
 
-function AnimatedCounter({ target, suffix = "", prefix = "" }: { target: number; suffix?: string; prefix?: string }) {
+function AnimatedCounter({ target, suffix = "" }: { target: number; suffix?: string }) {
   const [count, setCount] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
   const isInView = useInView(ref, { once: true });
@@ -29,10 +29,23 @@ function AnimatedCounter({ target, suffix = "", prefix = "" }: { target: number;
 
   return (
     <span ref={ref}>
-      {prefix}{count.toLocaleString()}{suffix}
+      {count.toLocaleString()}{suffix}
     </span>
   );
 }
+
+const textReveal = {
+  hidden: { opacity: 0, y: 40 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: 0.8 + i * 0.15,
+      duration: 0.8,
+      ease: [0.25, 0.46, 0.45, 0.94] as const,
+    },
+  }),
+};
 
 export function HeroSection() {
   const sectionRef = useRef(null);
@@ -71,18 +84,20 @@ export function HeroSection() {
             className="py-12 lg:py-0"
           >
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
+              custom={0}
+              variants={textReveal}
+              initial="hidden"
+              animate="visible"
               className="section-label mb-6"
             >
               // INTELLIGENCE COMMAND CENTER
             </motion.div>
 
             <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
+              custom={1}
+              variants={textReveal}
+              initial="hidden"
+              animate="visible"
               className="font-[family-name:var(--font-space-grotesk)] text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.05] tracking-tight mb-6"
             >
               The Sovereign{" "}
@@ -91,19 +106,21 @@ export function HeroSection() {
             </motion.h1>
 
             <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.6 }}
-              className="text-lg md:text-xl text-white/45 leading-relaxed mb-8 max-w-xl"
+              custom={2}
+              variants={textReveal}
+              initial="hidden"
+              animate="visible"
+              className="text-lg md:text-xl text-white/40 leading-relaxed mb-8 max-w-xl"
             >
               AI agents, startup creation, wealth intelligence, and autonomous execution unified into one intelligence layer.
             </motion.p>
 
             {/* CTA Buttons */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
+              custom={3}
+              variants={textReveal}
+              initial="hidden"
+              animate="visible"
               className="flex flex-wrap gap-4"
             >
               <motion.button
@@ -111,7 +128,6 @@ export function HeroSection() {
                 whileHover={{ scale: 1.03, boxShadow: "0 0 40px rgba(91,140,255,0.3)" }}
                 whileTap={{ scale: 0.97 }}
                 className="group px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#5B8CFF] to-[#7C3AED] text-white font-medium text-sm flex items-center gap-2 transition-all duration-300"
-                data-cursor-hover="true"
               >
                 <Rocket size={16} />
                 Launch Helix
@@ -122,8 +138,7 @@ export function HeroSection() {
                 onClick={handleWatchDemo}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                className="group px-6 py-3.5 rounded-xl glass text-white/60 hover:text-white font-medium text-sm flex items-center gap-2 hover:border-white/20 transition-all duration-300"
-                data-cursor-hover="true"
+                className="group px-6 py-3.5 rounded-xl glass text-white/55 hover:text-white font-medium text-sm flex items-center gap-2 hover:border-white/20 transition-all duration-300"
               >
                 <Play size={14} />
                 Watch Intelligence Demo
@@ -132,40 +147,41 @@ export function HeroSection() {
 
             {/* Trust metrics */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 1 }}
+              custom={4}
+              variants={textReveal}
+              initial="hidden"
+              animate="visible"
               className="mt-12 flex items-center gap-8"
             >
               <div>
                 <div className="text-2xl font-bold font-[family-name:var(--font-space-grotesk)] text-gradient-blue">
                   <AnimatedCounter target={2536} suffix="+" />
                 </div>
-                <div className="text-xs text-white/25 mt-1">Knowledge Points</div>
+                <div className="text-xs text-white/20 mt-1">Knowledge Points</div>
               </div>
               <div className="w-px h-10 bg-white/10" />
               <div>
                 <div className="text-2xl font-bold font-[family-name:var(--font-space-grotesk)] text-gradient-blue">
                   <AnimatedCounter target={22} />
                 </div>
-                <div className="text-xs text-white/25 mt-1">AI Collections</div>
+                <div className="text-xs text-white/20 mt-1">AI Collections</div>
               </div>
               <div className="w-px h-10 bg-white/10" />
               <div>
                 <div className="text-2xl font-bold font-[family-name:var(--font-space-grotesk)] text-gradient-blue">
                   <AnimatedCounter target={6} />
                 </div>
-                <div className="text-xs text-white/25 mt-1">Agent Types</div>
+                <div className="text-xs text-white/20 mt-1">Agent Types</div>
               </div>
             </motion.div>
           </motion.div>
 
-          {/* Right: 3D Helix with parallax */}
+          {/* Right: Cinematic 3D Helix */}
           <motion.div
             style={{ scale: helixScale, opacity: helixOpacity }}
             className="relative w-full h-[400px] lg:h-[600px]"
           >
-            <HelixCore />
+            <CinematicHero />
             {/* Glow behind */}
             <div className="absolute inset-0 -z-10">
               <motion.div
@@ -188,8 +204,8 @@ export function HeroSection() {
         onClick={handleScrollDown}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 2 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/20 hover:text-white/50 transition-colors hidden md:block"
+        transition={{ delay: 2.5 }}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/15 hover:text-white/40 transition-colors hidden md:block"
       >
         <motion.div
           animate={{ y: [0, 8, 0] }}

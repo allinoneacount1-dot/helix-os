@@ -361,3 +361,33 @@ body {
   0%, 100% { stroke-opacity: 0.1; }
   50% { stroke-opacity: 0.5; }
 }
+
+/* ═══════════════════════════════════
+   TEXT GRADIENT WARM
+   ═══════════════════════════════════ */
+.text-gradient-warm {
+  background: linear-gradient(135deg, #EF4444 0%, #F59E0B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ═══════════════════════════════════
+   SECTION DIVIDER
+   ═══════════════════════════════════ */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(91,140,255,0.12), rgba(124,58,237,0.12), transparent);
+}
+
+/* ═══════════════════════════════════
+   CINEMATIC GLOW
+   ═══════════════════════════════════ */
+@keyframes glow-breathe {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.05); }
+}
+
+.glow-breathe {
+  animation: glow-breathe 4s ease-in-out infinite;
+}
