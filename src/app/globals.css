@@ -1,26 +1,191 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --primary: #5B8CFF;
+  --secondary: #7C3AED;
+  --accent: #00D4AA;
+  --danger: #EF4444;
+  --warning: #F59E0B;
+  --bg: #050816;
+  --surface: #0B1120;
+  --glass: rgba(255, 255, 255, 0.06);
+  --border: rgba(255, 255, 255, 0.08);
+  --glow: rgba(91, 140, 255, 0.25);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: #e8e8f0;
+  overflow-x: hidden;
+}
+
+/* Noise texture overlay */
+.noise-bg::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.03;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Glow effects */
+.glow-primary {
+  box-shadow: 0 0 40px rgba(91, 140, 255, 0.15), 0 0 80px rgba(91, 140, 255, 0.05);
+}
+
+.glow-secondary {
+  box-shadow: 0 0 40px rgba(124, 58, 237, 0.15), 0 0 80px rgba(124, 58, 237, 0.05);
+}
+
+.glow-accent {
+  box-shadow: 0 0 40px rgba(0, 212, 170, 0.15), 0 0 80px rgba(0, 212, 170, 0.05);
+}
+
+/* Text gradient */
+.text-gradient {
+  background: linear-gradient(135deg, #5B8CFF 0%, #7C3AED 50%, #00D4AA 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-blue {
+  background: linear-gradient(135deg, #5B8CFF, #00D4AA);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Animated gradient mesh */
+@keyframes meshMove {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -30px) scale(1.05); }
+  50% { transform: translate(-20px, 20px) scale(0.95); }
+  75% { transform: translate(10px, 10px) scale(1.02); }
+}
+
+.mesh-gradient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.mesh-gradient .orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.15;
+  animation: meshMove 20s ease-in-out infinite;
+}
+
+.mesh-gradient .orb:nth-child(1) {
+  width: 600px;
+  height: 600px;
+  background: #5B8CFF;
+  top: -10%;
+  left: -5%;
+  animation-delay: 0s;
+}
+
+.mesh-gradient .orb:nth-child(2) {
+  width: 500px;
+  height: 500px;
+  background: #7C3AED;
+  top: 30%;
+  right: -10%;
+  animation-delay: -7s;
+}
+
+.mesh-gradient .orb:nth-child(3) {
+  width: 400px;
+  height: 400px;
+  background: #00D4AA;
+  bottom: -5%;
+  left: 30%;
+  animation-delay: -14s;
+}
+
+/* Pulse animation */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+/* Float animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Section label */
+.section-label {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #5B8CFF;
+}
+
+/* Ripple effect on click */
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Scrollbar for webkit */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
