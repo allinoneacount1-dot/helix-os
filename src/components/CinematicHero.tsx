@@ -2,11 +2,7 @@
 
 import { useRef, useMemo, useState, useEffect, useCallback } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import {
-  Float,
-  OrbitControls,
-  Environment,
-} from "@react-three/drei";
+import { Float, OrbitControls, Environment, Billboard, Text } from "@react-three/drei";
 import * as THREE from "three";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -161,16 +157,196 @@ function HelixConnections({
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   HELIX LOGO — 3D Logo emblem at the center
+   ═══════════════════════════════════════════════════════════════ */
+
+function HelixLogo({ visible, progress }: { visible: boolean; progress: number }) {
+  const groupRef = useRef<THREE.Group>(null);
+  const ringRef = useRef<THREE.Mesh>(null);
+  const innerRingRef = useRef<THREE.Mesh>(null);
+  const coreRef = useRef<THREE.Mesh>(null);
+  const glowRef = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    if (!groupRef.current || !visible) return;
+    const t = state.clock.elapsedTime;
+
+    // Slow rotation
+    groupRef.current.rotation.y = t * 0.15;
+    groupRef.current.rotation.x = Math.sin(t * 0.1) * 0.1;
+
+    // Pulse
+    const pulse = Math.sin(t * 1.5) * 0.15 + 1;
+    if (coreRef.current) {
+      coreRef.current.scale.setScalar(pulse);
+    }
+    if (glowRef.current) {
+      const glowMat = glowRef.current.material as THREE.MeshBasicMaterial;
+      glowMat.opacity = Math.sin(t * 2) * 0.1 + 0.15;
+    }
+    if (ringRef.current) {
+      const ringMat = ringRef.current.material as THREE.MeshStandardMaterial;
+      ringMat.emissiveIntensity = Math.sin(t * 1.2) * 0.3 + 0.5;
+    }
+    if (innerRingRef.current) {
+      innerRingRef.current.rotation.z = t * 0.3;
+    }
+  });
+
+  if (!visible) return null;
+
+  const opacity = Math.min(progress, 1);
+
+  return (
+    <group ref={groupRef} scale={[0.8, 0.8, 0.8]}>
+      {/* Outer ring */}
+      <mesh ref={ringRef}>
+        <torusGeometry args={[0.8, 0.02, 16, 64]} />
+        <meshStandardMaterial
+          color={COLORS.primary}
+          emissive={COLORS.primary}
+          emissiveIntensity={0.5}
+          transparent
+          opacity={opacity * 0.9}
+          roughness={0.1}
+          metalness={0.9}
+        />
+      </mesh>
+
+      {/* Inner ring */}
+      <mesh ref={innerRingRef}>
+        <torusGeometry args={[0.55, 0.015, 16, 48]} />
+        <meshStandardMaterial
+          color={COLORS.secondary}
+          emissive={COLORS.secondary}
+          emissiveIntensity={0.4}
+          transparent
+          opacity={opacity * 0.8}
+          roughness={0.1}
+          metalness={0.9}
+        />
+      </mesh>
+
+      {/* Core sphere */}
+      <mesh ref={coreRef}>
+        <sphereGeometry args={[0.18, 32, 32]} />
+        <meshStandardMaterial
+          color={COLORS.accent}
+          emissive={COLORS.accent}
+          emissiveIntensity={1.5}
+          transparent
+          opacity={opacity}
+          roughness={0.0}
+          metalness={1.0}
+        />
+      </mesh>
+
+      {/* Glow */}
+      <mesh ref={glowRef}>
+        <sphereGeometry args={[0.35, 32, 32]} />
+        <meshBasicMaterial
+          color={COLORS.accent}
+          transparent
+          opacity={0.12 * opacity}
+          blending={THREE.AdditiveBlending}
+        />
+      </mesh>
+
+      {/* Cross bars forming the helix X shape */}
+      {[0, Math.PI / 2].map((rotation, i) => (
+        <mesh key={i} rotation={[0, rotation, 0]}>
+          <boxGeometry args={[1.4, 0.02, 0.02]} />
+          <meshStandardMaterial
+            color={i === 0 ? COLORS.primary : COLORS.secondary}
+            emissive={i === 0 ? COLORS.primary : COLORS.secondary}
+            emissiveIntensity={0.6}
+            transparent
+            opacity={opacity * 0.7}
+            roughness={0.2}
+            metalness={0.8}
+          />
+        </mesh>
+      ))}
+
+      {/* Small node spheres along the cross */}
+      {[
+        { pos: [0.5, 0, 0] as const, color: COLORS.primary },
+        { pos: [-0.5, 0, 0] as const, color: COLORS.primary },
+        { pos: [0, 0, 0.5] as const, color: COLORS.secondary },
+        { pos: [0, 0, -0.5] as const, color: COLORS.secondary },
+      ].map((node, i) => (
+        <mesh key={i} position={node.pos}>
+          <sphereGeometry args={[0.04, 16, 16]} />
+          <meshStandardMaterial
+            color={node.color}
+            emissive={node.color}
+            emissiveIntensity={1.0}
+            transparent
+            opacity={opacity * 0.9}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LOGO SPRITE — Actual logo image as a 3D sprite
+   ═══════════════════════════════════════════════════════════════ */
+
+function LogoSprite({ visible, progress }: { visible: boolean; progress: number }) {
+  const spriteRef = useRef<THREE.Sprite>(null);
+  const textureRef = useRef<THREE.Texture | null>(null);
+
+  // Load the logo texture
+  useEffect(() => {
+    const loader = new THREE.TextureLoader();
+    loader.load('/helix-logo.png', (texture) => {
+      texture.colorSpace = THREE.SRGBColorSpace;
+      textureRef.current = texture;
+    });
+  }, []);
+
+  useFrame((state) => {
+    if (!spriteRef.current || !visible) return;
+    const t = state.clock.elapsedTime;
+
+    // Gentle float
+    spriteRef.current.position.y = Math.sin(t * 0.5) * 0.05;
+
+    // Pulse scale
+    const pulse = Math.sin(t * 1.2) * 0.03 + 1;
+    const mat = spriteRef.current.material as THREE.SpriteMaterial;
+    mat.opacity = Math.min(progress, 0.9);
+    spriteRef.current.scale.setScalar(pulse * 1.5);
+  });
+
+  if (!visible) return null;
+
+  return (
+    <sprite ref={spriteRef} position={[0, 0, 0]} scale={[1.5, 1, 1]}>
+      <spriteMaterial
+        map={textureRef.current}
+        transparent
+        opacity={Math.min(progress, 0.9)}
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+      />
+    </sprite>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
    AGENT NODES — Orbiting spheres representing AI agents
    ═══════════════════════════════════════════════════════════════ */
 
 const AGENT_DATA = [
-  { color: COLORS.primary, orbitRadius: 2.0, orbitSpeed: 0.3, phase: 0, size: 0.14, label: "CEO" },
-  { color: COLORS.secondary, orbitRadius: 2.2, orbitSpeed: 0.25, phase: Math.PI * 0.5, size: 0.1, label: "Founder" },
-  { color: COLORS.accent, orbitRadius: 2.4, orbitSpeed: 0.35, phase: Math.PI, size: 0.1, label: "Research" },
-  { color: new THREE.Color("#F59E0B"), orbitRadius: 2.1, orbitSpeed: 0.28, phase: Math.PI * 1.5, size: 0.1, label: "Builder" },
-  { color: new THREE.Color("#EF4444"), orbitRadius: 2.3, orbitSpeed: 0.32, phase: Math.PI * 0.25, size: 0.1, label: "Design" },
-  { color: COLORS.primary, orbitRadius: 2.5, orbitSpeed: 0.22, phase: Math.PI * 0.75, size: 0.1, label: "Trading" },
+  { color: COLORS.primary, orbitRadius: 2.0, orbitSpeed: 0.3, phase: 0, size: 0.14 },
+  { color: COLORS.secondary, orbitRadius: 2.2, orbitSpeed: 0.25, phase: Math.PI * 0.5, size: 0.1 },
+  { color: COLORS.accent, orbitRadius: 2.4, orbitSpeed: 0.35, phase: Math.PI, size: 0.1 },
+  { color: new THREE.Color("#F59E0B"), orbitRadius: 2.1, orbitSpeed: 0.28, phase: Math.PI * 1.5, size: 0.1 },
+  { color: new THREE.Color("#EF4444"), orbitRadius: 2.3, orbitSpeed: 0.32, phase: Math.PI * 0.25, size: 0.1 },
+  { color: COLORS.primary, orbitRadius: 2.5, orbitSpeed: 0.22, phase: Math.PI * 0.75, size: 0.1 },
 ];
 
 function AgentNodes({
@@ -192,13 +368,11 @@ function AgentNodes({
       const z = Math.sin(t) * data.orbitRadius;
       const y = Math.sin(t * 0.5) * 0.5;
 
-      // Mouse reactivity
       const mouseInfluence = 0.15;
       child.position.x = x + mousePos.current.x * mouseInfluence;
       child.position.z = z + mousePos.current.y * mouseInfluence;
       child.position.y = y;
 
-      // Pulse glow
       const glow = child.children[1] as THREE.Mesh;
       if (glow) {
         const scale = 1 + Math.sin(state.clock.elapsedTime * 2 + i) * 0.2;
@@ -213,7 +387,6 @@ function AgentNodes({
     <group ref={groupRef}>
       {AGENT_DATA.map((agent, i) => (
         <group key={i}>
-          {/* Core sphere */}
           <mesh>
             <sphereGeometry args={[agent.size, 24, 24]} />
             <meshStandardMaterial
@@ -226,68 +399,11 @@ function AgentNodes({
               metalness={0.9}
             />
           </mesh>
-          {/* Glow sphere */}
           <mesh>
             <sphereGeometry args={[agent.size * 3, 16, 16]} />
             <meshBasicMaterial color={agent.color} transparent opacity={0.06} />
           </mesh>
         </group>
-      ))}
-    </group>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   AGENT CONNECTION LINES — Data pulses between agents
-   ═══════════════════════════════════════════════════════════════ */
-
-function AgentConnections({ visible }: { visible: boolean }) {
-  const linesRef = useRef<THREE.Group>(null);
-
-  const connections = useMemo(() => {
-    const pairs: [number, number][] = [];
-    for (let i = 0; i < AGENT_DATA.length; i++) {
-      pairs.push([i, (i + 1) % AGENT_DATA.length]);
-      pairs.push([i, (i + 3) % AGENT_DATA.length]);
-    }
-    return pairs;
-  }, []);
-
-  useFrame((state) => {
-    if (!linesRef.current || !visible) return;
-    linesRef.current.children.forEach((child, i) => {
-      const mat = (child as THREE.Line).material as THREE.LineBasicMaterial;
-      if (mat) {
-        const pulse = Math.sin(state.clock.elapsedTime * 1.5 + i * 0.5) * 0.5 + 0.5;
-        mat.opacity = pulse * 0.25;
-      }
-    });
-  });
-
-  if (!visible) return null;
-
-  return (
-    <group ref={linesRef}>
-      {connections.map(([from, to], i) => (
-        <line key={i}>
-          <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              args={[
-                new Float32Array([
-                  Math.cos(0) * AGENT_DATA[from].orbitRadius,
-                  0,
-                  Math.sin(0) * AGENT_DATA[from].orbitRadius,
-                  Math.cos(0) * AGENT_DATA[to].orbitRadius,
-                  0,
-                  Math.sin(0) * AGENT_DATA[to].orbitRadius,
-                ]),
-                3,
-              ]}
-            />
-          </bufferGeometry>
-          <lineBasicMaterial color={COLORS.primary} transparent opacity={0.15} />
-        </line>
       ))}
     </group>
   );
@@ -308,7 +424,6 @@ function KnowledgeGraph({ visible }: { visible: boolean }) {
     const conns: THREE.BufferGeometry[] = [];
 
     for (let i = 0; i < count; i++) {
-      // Spherical distribution expanding outward
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
       const r = 3 + Math.random() * 4;
@@ -317,14 +432,12 @@ function KnowledgeGraph({ visible }: { visible: boolean }) {
       pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
       pos[i * 3 + 2] = r * Math.cos(phi);
 
-      // Color mix
       const colorChoice = Math.random();
       const c = colorChoice < 0.4 ? COLORS.primary : colorChoice < 0.7 ? COLORS.secondary : COLORS.accent;
       col[i * 3] = c.r;
       col[i * 3 + 1] = c.g;
       col[i * 3 + 2] = c.b;
 
-      // Create connections to nearby nodes
       if (i > 0 && Math.random() < 0.15) {
         const j = Math.floor(Math.random() * i);
         const linePts = [
@@ -397,17 +510,14 @@ function ParticleField({
     const vel = new Float32Array(count * 3);
 
     for (let i = 0; i < count; i++) {
-      // Start scattered, will converge during formation
       pos[i * 3] = (Math.random() - 0.5) * 12;
       pos[i * 3 + 1] = (Math.random() - 0.5) * 12;
       pos[i * 3 + 2] = (Math.random() - 0.5) * 12;
 
-      // Random velocities for organic movement
       vel[i * 3] = (Math.random() - 0.5) * 0.02;
       vel[i * 3 + 1] = (Math.random() - 0.5) * 0.02;
       vel[i * 3 + 2] = (Math.random() - 0.5) * 0.02;
 
-      // Color distribution
       const colorChoice = Math.random();
       const c = colorChoice < 0.4 ? COLORS.primary : colorChoice < 0.7 ? COLORS.secondary : COLORS.accent;
       col[i * 3] = c.r;
@@ -424,12 +534,10 @@ function ParticleField({
     const arr = posAttr.array as Float32Array;
 
     for (let i = 0; i < count; i++) {
-      // Organic drift
       arr[i * 3] += velocities[i * 3] * Math.sin(state.clock.elapsedTime * 0.5 + i * 0.01);
       arr[i * 3 + 1] += velocities[i * 3 + 1] * Math.cos(state.clock.elapsedTime * 0.3 + i * 0.01);
       arr[i * 3 + 2] += velocities[i * 3 + 2] * Math.sin(state.clock.elapsedTime * 0.4 + i * 0.01);
 
-      // Boundary wrap
       for (let j = 0; j < 3; j++) {
         const idx = i * 3 + j;
         if (arr[idx] > 8) arr[idx] = -8;
@@ -437,8 +545,6 @@ function ParticleField({
       }
     }
     posAttr.needsUpdate = true;
-
-    // Slow rotation
     pointsRef.current.rotation.y = state.clock.elapsedTime * 0.008;
   });
 
@@ -550,18 +656,16 @@ function AuroraLights({ visible }: { visible: boolean }) {
 
 function CameraController() {
   const { camera } = useThree();
-  const initialPos = useRef(new THREE.Vector3(0, 0, 6));
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
 
-    // Very slow, deliberate dolly
     const dollyZ = 6 + Math.sin(t * 0.08) * 0.5;
     const dollyY = Math.sin(t * 0.06) * 0.15;
     const dollyX = Math.sin(t * 0.04) * 0.2;
 
-    camera.position.x = THREE.MathUtils.lerp(camera.position.x, initialPos.current.x + dollyX, 0.02);
-    camera.position.y = THREE.MathUtils.lerp(camera.position.y, initialPos.current.y + dollyY, 0.02);
+    camera.position.x = THREE.MathUtils.lerp(camera.position.x, dollyX, 0.02);
+    camera.position.y = THREE.MathUtils.lerp(camera.position.y, dollyY, 0.02);
     camera.position.z = THREE.MathUtils.lerp(camera.position.z, dollyZ, 0.02);
 
     camera.lookAt(0, 0, 0);
@@ -579,7 +683,6 @@ function CinematicScene() {
   const [elapsed, setElapsed] = useState(0);
   const mousePos = useRef({ x: 0, y: 0 });
 
-  // Track mouse for interactivity
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       mousePos.current.x = (e.clientX / window.innerWidth) * 2 - 1;
@@ -593,7 +696,6 @@ function CinematicScene() {
     setElapsed(state.clock.elapsedTime);
   });
 
-  // Calculate scene visibility and progress
   const showParticles = elapsed >= SCENES.awakening.start;
   const particleOpacity = Math.min((elapsed - SCENES.awakening.start) / 3, 1);
 
@@ -606,12 +708,17 @@ function CinematicScene() {
   const showHelixFull = elapsed >= SCENES.genesis.start;
   const showConnections = elapsed >= SCENES.genesis.start;
 
+  const showLogo = elapsed >= SCENES.genesis.start;
+  const logoProgress = Math.min(
+    Math.max((elapsed - SCENES.genesis.start) / 2, 0),
+    1
+  );
+
   const showAgents = elapsed >= SCENES.agents.start;
   const showKnowledge = elapsed >= SCENES.knowledge.start;
   const showAurora = elapsed >= SCENES.sovereign.start;
   const showPulses = elapsed >= SCENES.genesis.start;
 
-  // Idle loop breathing
   const isIdle = elapsed >= SCENES.loop.start;
   const breathe = isIdle ? Math.sin(elapsed * 0.5) * 0.05 : 0;
 
@@ -626,10 +733,10 @@ function CinematicScene() {
       <pointLight position={[0, 3, -3]} intensity={0.3} color={COLORS.accent} />
       <pointLight position={[0, 0, 4]} intensity={0.2} color={COLORS.white} />
 
-      {/* Scene 01-02: Particle Field (awakens at 2s) */}
+      {/* Scene 01-02: Particle Field */}
       <ParticleField count={5000} sceneProgress={particleOpacity} />
 
-      {/* Scene 03-04: Helix Formation (forms 5s-12s) */}
+      {/* Scene 03-04: Helix Formation */}
       {showHelixFormation && !showHelixFull && (
         <group scale={[1 + breathe, 1 + breathe, 1 + breathe]}>
           <HelixStrand color={COLORS.primary} offset={0} progress={helixProgress} />
@@ -638,7 +745,7 @@ function CinematicScene() {
         </group>
       )}
 
-      {/* Scene 04+: Full Helix (complete at 12s) */}
+      {/* Scene 04+: Full Helix + Logo */}
       {showHelixFull && (
         <group scale={[1 + breathe, 1 + breathe, 1 + breathe]}>
           <Float speed={0.5} rotationIntensity={0.05} floatIntensity={0.1}>
@@ -647,17 +754,22 @@ function CinematicScene() {
           </Float>
           {showConnections && <HelixConnections progress={1} />}
           {showPulses && <EnergyPulses visible={true} />}
+
+          {/* Helix Logo at center */}
+          <HelixLogo visible={showLogo} progress={logoProgress} />
+
+          {/* Logo Sprite — actual logo image */}
+          <LogoSprite visible={showLogo} progress={logoProgress} />
         </group>
       )}
 
-      {/* Scene 05: Agent Activation (12s-16s) */}
+      {/* Scene 05: Agent Activation */}
       <AgentNodes visible={showAgents} mousePos={mousePos} />
-      <AgentConnections visible={showAgents} />
 
-      {/* Scene 06: Knowledge Expansion (16s-20s) */}
+      {/* Scene 06: Knowledge Expansion */}
       <KnowledgeGraph visible={showKnowledge} />
 
-      {/* Scene 07: Aurora Lights (20s+) */}
+      {/* Scene 07: Aurora Lights */}
       <AuroraLights visible={showAurora} />
     </group>
   );
